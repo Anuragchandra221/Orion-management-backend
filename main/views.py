@@ -30,7 +30,7 @@ class MyTokenObtainPairView(TokenObtainPairView):
 # Create your views here.
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
-def getUser(request):
+def get_count(request):
     users = UserAccount.objects.values('account_type').annotate(count=Count('account_type')).order_by()
     print(users)
     serializer = UserSerializer(users, many=True)
@@ -38,6 +38,14 @@ def getUser(request):
     return Response({
         "admin":users
     })
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def getCoordinator(request):
+    coordinator = UserAccount.objects.filter(account_type="coordinator")
+    serializer = UserSerializer(coordinator, many=True)
+
+    return Response(serializer.data)
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
@@ -51,7 +59,7 @@ def create_coordinator(request):
             return Response({"err":"Coordinator already exists"})
         password = make_password(request.data['password'])
         user = UserAccount(
-            email=request.data['email'], name=request.data['name'], password=password, account_type="coordinator", dob=request.data['dob'], gender=request.data['gender'],number=request.data['number']
+            email=request.data['email'], name=request.data['name'], password=password, account_type="coordinator", dob=request.data['dob'], gender=request.data['gender'],number=request.data['number'], register=request.data['register']
         )
         try:    
             subject = "Congratulation on being the coordinator"
