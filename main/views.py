@@ -63,7 +63,8 @@ def create_coordinator(request):
         )
         try:    
             subject = "Congratulation on being the coordinator"
-            message = f'Hi {name}, you are now a coordinator in the ORION MANAGEMENT SYSTEM...'
+            password = request.data['password']
+            message = f'Hi {name}, you are now a coordinator in the ORION MANAGEMENT SYSTEM...\nSign In with the following credentials\nUsername: {email}\nPassword: {password}'
             send_mail(subject, message, settings.EMAIL_HOST_USER, [email])
             try:
                 user.save()
