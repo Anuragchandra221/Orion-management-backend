@@ -84,7 +84,7 @@ def reset_password_confirm(request):
     if (usr<1):
         return Response({"err":"Email doesnt exists"})
     encoded = j.encode({"email": email}, "secret", algorithm="HS256")
-    link = f"http://localhost:3000/forgot_password/{encoded}"
+    link = f"https://orionmanagement.netlify.app/forgot_password/{encoded}"
     subject = "Reset your password"
     message = f'Hi , Reset your password at {link}'
     send_mail(subject, message, settings.EMAIL_HOST_USER, [email])
