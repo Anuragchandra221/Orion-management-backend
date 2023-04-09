@@ -12,4 +12,6 @@ urlpatterns = [
     path('get-count/', views.get_count),
     path('create-coordinator/', views.create_coordinator),
     path('get-coordinator/', views.getCoordinator),
+    path('reset-password-confirm/', views.reset_password_confirm),
+    path('reset-password/', views.reset_password),
 ] 

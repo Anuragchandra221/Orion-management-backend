@@ -10,6 +10,7 @@ from django.db.models import Count
 from django.conf import settings
 from django.contrib.auth.hashers import make_password
 from django.core.mail import send_mail
+import jwt as j
 
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
     @classmethod
@@ -75,4 +76,26 @@ def create_coordinator(request):
             return Response({"err":"Invalid data"})
     else:
         return Response({"err":"You dont have the permission"})
-    
+
+@api_view(['POST'])
+def reset_password_confirm(request):
+    email = request.data['email']
+    usr = UserAccount.objects.filter(email=email).count()
+    if (usr<1):
+        return Response({"err":"Email doesnt exists"})
+    encoded = j.encode({"email": email}, "secret", algorithm="HS256")
+    link = f"http://localhost:3000/forgot_password/{encoded}"
+    subject = "Reset your password"
+    message = f'Hi , Reset your password at {link}'
+    send_mail(subject, message, settings.EMAIL_HOST_USER, [email])
+    return Response({"msg":"You have a mail"})
+
+@api_view(['POST'])
+def reset_password(request):
+    email = request.data['email']
+    usr = UserAccount.objects.filter(email=email).count()
+    if (usr<1):
+        return Response({"err":"Email doesnt exists"})
+    password = make_password(request.data['password'])
+    UserAccount.objects.filter(email=email).update(password=password)
+    return Response({"msg":"Password changed successfully"})
