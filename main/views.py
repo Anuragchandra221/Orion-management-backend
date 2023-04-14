@@ -48,6 +48,14 @@ def getCoordinator(request):
 
     return Response(serializer.data)
 
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def getGuide(request):
+    guide = UserAccount.objects.filter(account_type="guide")
+    serializer = UserSerializer(guide, many=True)
+
+    return Response(serializer.data)
+
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def create_coordinator(request):
@@ -76,6 +84,36 @@ def create_coordinator(request):
             return Response({"err":"Invalid data"})
     else:
         return Response({"err":"You dont have the permission"})
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def create_guide(request):
+    user = request.user
+    if(user.account_type=="coordinator"):
+        email = request.data['email']
+        name = request.data['name']
+        usr = UserAccount.objects.filter(email=email).count()
+        if (usr>=1):
+            return Response({"err":"Coordinator already exists"})
+        password = make_password(request.data['password'])
+        user = UserAccount(
+            email=request.data['email'], name=request.data['name'], password=password, account_type="guide", dob=request.data['dob'], gender=request.data['gender'],number=request.data['number'], register=request.data['register']
+        )
+        try:    
+            subject = "Congratulation on being the guide"
+            password = request.data['password']
+            message = f'Hi {name}, you are now a guide in the ORION MANAGEMENT SYSTEM...\nSign In with the following credentials\nUsername: {email}\nPassword: {password}'
+            send_mail(subject, message, settings.EMAIL_HOST_USER, [email])
+            try:
+                user.save()
+                return Response({"msg":"guide added successfully"})
+            except:
+                return Response({"err":"Mail not sent"})
+        except:
+            return Response({"err":"Invalid data"})
+    else:
+        return Response({"err":"You dont have the permission"})
+
 
 @api_view(['POST'])
 def reset_password_confirm(request):
