@@ -16,6 +16,9 @@ urlpatterns = [
     path('get-coordinator/', views.getCoordinator),
     path('get-guide/', views.getGuide),
     path('get-student/', views.getStudent),
+    path('get-user/', views.getUser),
+    path('edit-account/', views.edit),
+    path('edit-guide/', views.edit_guide),
     path('reset-password-confirm/', views.reset_password_confirm),
     path('reset-password/', views.reset_password),
 ] 

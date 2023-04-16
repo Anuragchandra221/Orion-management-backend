@@ -5,7 +5,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import api_view, permission_classes
 from .models import UserAccount
 from rest_framework.response import Response
-from .serializers import UserSerializer
+from .serializers import UserSerializer,UserSerializer2
 from django.db.models import Count
 from django.conf import settings
 from django.contrib.auth.hashers import make_password
@@ -66,6 +66,16 @@ def getStudent(request):
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
+def getUser(request):
+
+    user = UserAccount.objects.filter(email=request.data['email'])
+    serializer = UserSerializer2(user, many=True)
+    print(serializer.data)
+
+    return Response(serializer.data)
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
 def create_coordinator(request):
     user = request.user
     if(user.account_type=="admin"):
@@ -102,7 +112,7 @@ def create_guide(request):
         name = request.data['name']
         usr = UserAccount.objects.filter(email=email).count()
         if (usr>=1):
-            return Response({"err":"Coordinator already exists"})
+            return Response({"err":"Guide already exists"})
         password = make_password(request.data['password'])
         user = UserAccount(
             email=request.data['email'], name=request.data['name'], password=password, account_type="guide", dob=request.data['dob'], gender=request.data['gender'],number=request.data['number'], register=request.data['register']
@@ -131,7 +141,7 @@ def create_student(request):
         name = request.data['name']
         usr = UserAccount.objects.filter(email=email).count()
         if (usr>=1):
-            return Response({"err":"Coordinator already exists"})
+            return Response({"err":"Student already exists"})
         password = make_password(request.data['password'])
         user = UserAccount(
             email=request.data['email'], name=request.data['name'], password=password, account_type="student", dob=request.data['dob'], gender=request.data['gender'],number=request.data['number'], register=request.data['register']
@@ -150,6 +160,33 @@ def create_student(request):
             return Response({"err":"Invalid data"})
     else:
         return Response({"err":"You dont have the permission"})
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def edit(request):
+    user = request.user
+    if(user.account_type=="admin"):
+        print(request.data, user.account_type)
+        print("admin")
+        try:
+            UserAccount.objects.filter(email=request.data['email']).update(email=request.data['email'], name=request.data['name'], dob=request.data['dob'], gender=request.data['gender'],number=request.data['number'], register=request.data['register'])
+        except Exception as e:
+            print(e)
+        return Response({"msg":"updated successfully"})
+    else:
+        return Response({"err":"you dont have the permission"})
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def edit_guide(request):
+    user = request.user
+    if(user.account_type=="coordinator"):
+        UserAccount.objects.filter(email=request.data['email']).update(email=request.data['email'], name=request.data['name'], dob=request.data['dob'], gender=request.data['gender'],number=request.data['number'], register=request.data['register'])
+        return Response({"msg":"updated successfully"})
+    else:
+        return Response({"err":"you dont have the permission"})
+
+
 
 
 @api_view(['POST'])
