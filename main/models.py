@@ -29,6 +29,12 @@ class UserAccountManager(BaseUserManager):
 
         return user
 
+class Project(models.Model):
+    title = models.CharField(max_length=50)
+    description = models.TextField()
+
+    def __str__(self):
+        return self.title
 
 
 class UserAccount(AbstractBaseUser, PermissionsMixin):
@@ -41,6 +47,7 @@ class UserAccount(AbstractBaseUser, PermissionsMixin):
     dob = models.DateField( auto_now=False, auto_now_add=False)
     number = models.CharField( max_length=50, null=True)
     register = models.CharField(max_length=50, null=True)
+    project = models.ForeignKey(Project, null=True, on_delete=models.PROTECT)
 
     objects = UserAccountManager()
 
