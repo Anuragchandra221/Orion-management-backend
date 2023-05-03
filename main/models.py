@@ -36,6 +36,12 @@ class Project(models.Model):
     def __str__(self):
         return self.title
 
+class Tasks(models.Model):
+    title = models.CharField(max_length=50)
+    description = description = models.TextField()
+    posted = models.DateTimeField(auto_now=True)
+    due_date = models.DateTimeField(auto_now=False, auto_now_add=False)
+    project = models.ForeignKey(Project, on_delete=models.CASCADE)
 
 class UserAccount(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(max_length=255, unique=True)
