@@ -1,6 +1,6 @@
-from rest_framework import serializers
+from rest_framework import serializers 
 
-from main.models import Tasks, Project
+from main.models import Tasks, Project, Work
 
 class TaskSerializer(serializers.ModelSerializer):
     class Meta:
@@ -11,3 +11,12 @@ class ProjectSerializer(serializers.ModelSerializer):
     class Meta:
         model = Project
         fields = ["title", "description"]
+
+class WorkSerializer(serializers.ModelSerializer):
+    files = serializers.FileField()
+
+    class Meta:
+        model = Work
+        fields = '__all__'
+
+

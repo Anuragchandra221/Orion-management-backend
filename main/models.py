@@ -41,7 +41,23 @@ class Tasks(models.Model):
     description = description = models.TextField()
     posted = models.DateTimeField(auto_now=True)
     due_date = models.DateTimeField(auto_now=False, auto_now_add=False)
-    project = models.ForeignKey(Project, on_delete=models.CASCADE)
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name="tasks")
+    completed = models.BooleanField(default=False)
+    max_score = models.IntegerField(default=100)
+    score_obtained = models.IntegerField(default=0)
+
+    def __str__(self):
+        return self.title+' '+self.project.title
+    
+
+class Work(models.Model):
+    id = models.AutoField(primary_key=True)
+    files = models.FileField( upload_to='files/', max_length=100)
+    task = models.ForeignKey(Tasks, on_delete=models.CASCADE, related_name="works")
+
+    def __str__(self):
+        return self.task.title+" "+self.task.project.title
+    
 
 class UserAccount(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(max_length=255, unique=True)
@@ -53,7 +69,7 @@ class UserAccount(AbstractBaseUser, PermissionsMixin):
     dob = models.DateField( auto_now=False, auto_now_add=False)
     number = models.CharField( max_length=50, null=True)
     register = models.CharField(max_length=50, null=True)
-    project = models.ForeignKey(Project, null=True, on_delete=models.PROTECT)
+    project = models.ForeignKey(Project, null=True, on_delete=models.PROTECT, related_name="users")
 
     objects = UserAccountManager()
 
