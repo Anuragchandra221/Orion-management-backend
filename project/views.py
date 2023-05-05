@@ -7,19 +7,23 @@ from main.models import UserAccount
 from rest_framework.response import Response
 from main.serializers import UserSerializer,UserSerializer2
 from django.db.models import Count
+from django.core.mail import send_mail
 from main.models import Project, Tasks, Work
 from django.conf import settings
 from django.db.models import Q
 from django.contrib.auth.hashers import make_password
 from django.core.mail import send_mail
+from datetime import datetime
 from .serializers import TaskSerializer, ProjectSerializer, WorkSerializer
 import jwt as j
+
 # Create your views here.
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def startProject(request):
     user = request.user
+    
     if(user.account_type=="coordinator"):
         project = Project.objects.filter(title=request.data['title']).count()
         if(project>0):
@@ -62,20 +66,40 @@ def createTask(request):
     user = request.user 
     if(user.account_type=="guide"):
         project = Project.objects.get(title=request.data['project_title'])
-        task = Tasks.objects.filter(project=project)
-        task_title = request.data['task_title']
-        for i in task:
-            if(i.title == task_title):
-                return Response({"err":"A task with similar name already exists.."})
-
-        description = request.data['description']
-        due_date = request.data['due_date']
-        task = Tasks(title=task_title, description=description, due_date=due_date, project=project)
         try:
-            task.save()
-            return Response({"msg":"Task added successfully"})
+            task = Tasks.objects.get(title=request.data['task_title'])
+            if(task in project.tasks.all()):
+                return Response({"err":"A task with similar name already exists.."})
+            else:
+                users = project.users.all()
+                for i in users:
+                    print(i.email)
+                    subject = "Congratulation on being the coordinator"
+                    my_datetime = datetime.strptime(request.data['due_date'][:-1], '%Y-%m-%dT%H:%M')
+                    new_date = datetime.fromisoformat(my_datetime)
+                    message = f"Hi {i.name}, New Assignment {request.data['task_title']} \n {request.data['description']}  \n Due date: {new_date}"
+                    send_mail(subject, message, settings.EMAIL_HOST_USER, [i.email])
+                description = request.data['description']
+                due_date = request.data['due_date']
+                return Response({"err":"A task with similar name already exists.."})
         except:
-            return Response({"err":"Something went wrong"})
+            users = project.users.all()
+            for i in users:
+                print(i.email)
+                subject = "Congratulation on being the coordinator"
+                my_datetime = datetime.strptime(request.data['due_date'][:-1], '%Y-%m-%dT%H:%M')
+                new_date = datetime.fromisoformat(my_datetime)
+                message = f"Hi {i.name}, New Assignment {request.data['task_title']} \n {request.data['description']}  \n Due date: {new_date}"
+                send_mail(subject, message, settings.EMAIL_HOST_USER, [i.email])
+            description = request.data['description']
+            due_date = request.data['due_date']
+            return Response({"err":"A task with similar name already exists.."})
+        # task = Tasks(title=task_title, description=description, due_date=due_date, project=project)
+        # try:
+        #     task.save()
+        #     return Response({"msg":"Task added successfully"})
+        # except:
+        #     return Response({"err":"Something went wrong"})
     else:
         return Response({"err":"You don't have the permission"})
 
@@ -83,7 +107,7 @@ def createTask(request):
 @permission_classes([IsAuthenticated])
 def showTask(request):
     user = request.user
-    if(user.account_type=="guide"):
+    if(user.account_type=="guide" or user.account_type=="student"):
         project = Project.objects.get(title=request.data['project_title'])
         try:
             tasks = Tasks.objects.filter(project=project)
@@ -98,7 +122,7 @@ def showTask(request):
 @permission_classes([IsAuthenticated])
 def getProject(request):
     user = request.user
-    if(user.account_type=="guide"):
+    if(user.account_type=="guide" or user.account_type=="student"):
         try:
             project = user.project
         except:
@@ -115,6 +139,7 @@ def uploadWork(request):
     project = Project.objects.get(title= request.data['project'])
     if (user in project.users.all()):
         files = request.FILES['file']
+        print(files)
         try:
             task = Tasks.objects.get(Q(project=project) & Q(title=request.data['task']))
             work = Work(files=files, task=task)
@@ -138,7 +163,6 @@ def getWork(request):
             task = Tasks.objects.get(Q(project=project) & Q(title=request.data['task']))
             work = Work.objects.filter(task=task)
             serializer = WorkSerializer(work, many=True)
-            print("hey")
             return Response(serializer.data)
         except:
             return Response({"err": "No such task in that project"})

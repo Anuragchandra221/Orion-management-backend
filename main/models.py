@@ -46,6 +46,9 @@ class Tasks(models.Model):
     max_score = models.IntegerField(default=100)
     score_obtained = models.IntegerField(default=0)
 
+    class Meta:
+        ordering = ["-due_date"]
+
     def __str__(self):
         return self.title+' '+self.project.title
     
@@ -56,7 +59,7 @@ class Work(models.Model):
     task = models.ForeignKey(Tasks, on_delete=models.CASCADE, related_name="works")
 
     def __str__(self):
-        return self.task.title+" "+self.task.project.title
+        return self.files.name
     
 
 class UserAccount(AbstractBaseUser, PermissionsMixin):
