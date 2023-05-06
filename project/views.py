@@ -14,6 +14,8 @@ from django.db.models import Q
 from django.contrib.auth.hashers import make_password
 from django.core.mail import send_mail
 from datetime import datetime
+from django.http import FileResponse
+from django.shortcuts import get_object_or_404
 from .serializers import TaskSerializer, ProjectSerializer, WorkSerializer
 import jwt as j
 
@@ -66,40 +68,25 @@ def createTask(request):
     user = request.user 
     if(user.account_type=="guide"):
         project = Project.objects.get(title=request.data['project_title'])
-        try:
-            task = Tasks.objects.get(title=request.data['task_title'])
-            if(task in project.tasks.all()):
-                return Response({"err":"A task with similar name already exists.."})
-            else:
-                users = project.users.all()
-                for i in users:
-                    print(i.email)
-                    subject = "Congratulation on being the coordinator"
-                    my_datetime = datetime.strptime(request.data['due_date'][:-1], '%Y-%m-%dT%H:%M')
-                    new_date = datetime.fromisoformat(my_datetime)
-                    message = f"Hi {i.name}, New Assignment {request.data['task_title']} \n {request.data['description']}  \n Due date: {new_date}"
-                    send_mail(subject, message, settings.EMAIL_HOST_USER, [i.email])
-                description = request.data['description']
-                due_date = request.data['due_date']
-                return Response({"err":"A task with similar name already exists.."})
-        except:
+        if(Tasks.objects.filter(Q(title=request.data['task_title']) & Q(project=project)).exists()):
+            return Response({"err":"A task with similar name already exists.."})
+        else:
             users = project.users.all()
             for i in users:
-                print(i.email)
-                subject = "Congratulation on being the coordinator"
+                subject = "You have a new Task"
                 my_datetime = datetime.strptime(request.data['due_date'][:-1], '%Y-%m-%dT%H:%M')
-                new_date = datetime.fromisoformat(my_datetime)
+                new_date = datetime.fromisoformat(my_datetime.strftime('%Y-%m-%d %H:%M'))
                 message = f"Hi {i.name}, New Assignment {request.data['task_title']} \n {request.data['description']}  \n Due date: {new_date}"
                 send_mail(subject, message, settings.EMAIL_HOST_USER, [i.email])
             description = request.data['description']
             due_date = request.data['due_date']
-            return Response({"err":"A task with similar name already exists.."})
-        # task = Tasks(title=task_title, description=description, due_date=due_date, project=project)
-        # try:
-        #     task.save()
-        #     return Response({"msg":"Task added successfully"})
-        # except:
-        #     return Response({"err":"Something went wrong"})
+            task = Tasks(title=request.data['task_title'], description=description, due_date=due_date, project=project)
+            try:
+                task.save()
+                return Response({"msg":"Task added successfully"})
+            except:
+                return Response({"err":"Something went wrong"})
+            return Response({"msg":"Task created successfully"})
     else:
         return Response({"err":"You don't have the permission"})
 
@@ -168,4 +155,14 @@ def getWork(request):
             return Response({"err": "No such task in that project"})
     else:
         return Response({"err":"You dont have the permission"})
+
+
+@api_view(['POST'])
+def get_pdf(request):
+    task = Tasks.objects.get(Q(project=request.data['project']) & Q(title=request.data['task']))
+    work = Work.objects.filter(task=task)
+    file = get_object_or_404(work.files)
+    response = FileResponse(file, content_type=file.content_type)
+    response['Content-Disposition'] = f'inline; filename="{file.name}"'
+    return response
 

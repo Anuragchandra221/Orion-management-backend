@@ -11,7 +11,6 @@ urlpatterns = [
     path('upload-work/', views.uploadWork),
     path('get-work/', views.getWork),
     path('get-project/', views.getProject),
+    path('get-pdf/', views.get_pdf),
 ]
 
-if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -5,6 +5,8 @@ from rest_framework_simplejwt.views import (
 )
 from .views import MyTokenObtainPairView
 from . import views
+from django.conf import settings
+from django.conf.urls.static import static
 
 urlpatterns = [
     path('token/', MyTokenObtainPairView.as_view(), name='token_obtain_pair'),
@@ -21,4 +23,8 @@ urlpatterns = [
     path('edit-guide/', views.edit_guide),
     path('reset-password-confirm/', views.reset_password_confirm),
     path('reset-password/', views.reset_password),
+    
 ] 
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
