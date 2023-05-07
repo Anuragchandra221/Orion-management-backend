@@ -44,7 +44,7 @@ class Tasks(models.Model):
     project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name="tasks")
     completed = models.BooleanField(default=False)
     max_score = models.IntegerField(default=100)
-    score_obtained = models.IntegerField(default=0)
+    score_obtained = models.IntegerField(null=True)
 
     class Meta:
         ordering = ["-due_date"]

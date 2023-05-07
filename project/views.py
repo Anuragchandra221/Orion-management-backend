@@ -10,13 +10,18 @@ from django.db.models import Count
 from django.core.mail import send_mail
 from main.models import Project, Tasks, Work
 from django.conf import settings
+from django.core.files import File
 from django.db.models import Q
 from django.contrib.auth.hashers import make_password
 from django.core.mail import send_mail
 from datetime import datetime
 from django.http import FileResponse
+import os
 from django.shortcuts import get_object_or_404
 from .serializers import TaskSerializer, ProjectSerializer, WorkSerializer
+from orion_backend.settings import  MEDIA_ROOT
+from django.http import HttpResponse
+
 import jwt as j
 
 # Create your views here.
@@ -156,13 +161,37 @@ def getWork(request):
     else:
         return Response({"err":"You dont have the permission"})
 
-
+@permission_classes([IsAuthenticated])
 @api_view(['POST'])
 def get_pdf(request):
-    task = Tasks.objects.get(Q(project=request.data['project']) & Q(title=request.data['task']))
-    work = Work.objects.filter(task=task)
-    file = get_object_or_404(work.files)
-    response = FileResponse(file, content_type=file.content_type)
-    response['Content-Disposition'] = f'inline; filename="{file.name}"'
-    return response
+    user = request.user
+    project = Project.objects.get(title= request.data['project'])
+    if (user in project.users.all()):
+        task = Tasks.objects.get(Q(project=project) & Q(title=request.data['task']))
+        work = Work.objects.get(Q(task=task) & Q(files=request.data['file']))
+
+        # print(work.id)
+        # file = get_object_or_404(Work, id=work.id)
+        # print(file)
+        f = open(f"{work.files.path}", 'rb')
+        files = File(f)
+        response = HttpResponse(files.read())
+        response['Content-Disposition'] = f'inline; filename="{work.files.name}"'
+        return response
+    else:
+        return Response({"err":"You dont have permission"})
+
+@permission_classes([IsAuthenticated])
+@api_view(['POST'])
+def give_marks(request):
+    user = request.user
+    project = Project.objects.get(title= request.data['project'])
+    if (user in project.users.all()):
+        task = Tasks.objects.get(Q(project=project) & Q(title=request.data['task']))
+        task.score_obtained = request.data['score']
+        task.save()
+        return Response({"msg":"Score updated"})
+
+    else:
+        return Response({"err":"You dont have permission"})
 

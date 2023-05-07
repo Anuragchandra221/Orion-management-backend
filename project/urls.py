@@ -12,5 +12,6 @@ urlpatterns = [
     path('get-work/', views.getWork),
     path('get-project/', views.getProject),
     path('get-pdf/', views.get_pdf),
+    path('give-marks/', views.give_marks),
 ]
 
