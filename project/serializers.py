@@ -13,11 +13,20 @@ class ProjectSerializer(serializers.ModelSerializer):
         model = Project
         fields = ["title", "description"]
 
+class ProjectSerializer2(serializers.ModelSerializer):
+    tasks = TaskSerializer(many=True, read_only=True)
+    class Meta:
+        model = Project
+        fields = ["title", "description", "tasks"]
+
+
 class WorkSerializer(serializers.ModelSerializer):
     files = serializers.FileField()
 
     class Meta:
         model = Work
         fields = '__all__'   
+
+
 
 

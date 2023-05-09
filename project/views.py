@@ -18,7 +18,7 @@ from datetime import datetime
 from django.http import FileResponse
 import os
 from django.shortcuts import get_object_or_404
-from .serializers import TaskSerializer, ProjectSerializer, WorkSerializer
+from .serializers import TaskSerializer, ProjectSerializer, WorkSerializer, ProjectSerializer2
 from orion_backend.settings import  MEDIA_ROOT
 from django.http import HttpResponse
 
@@ -166,7 +166,7 @@ def getWork(request):
 def get_pdf(request):
     user = request.user
     project = Project.objects.get(title= request.data['project'])
-    if (user in project.users.all()):
+    if (user in project.users.all() or (user.account_type=="admin" or user.account_type=='coordinator')):
         task = Tasks.objects.get(Q(project=project) & Q(title=request.data['task']))
         work = Work.objects.get(Q(task=task) & Q(files=request.data['file']))
 
@@ -186,7 +186,7 @@ def get_pdf(request):
 def give_marks(request):
     user = request.user
     project = Project.objects.get(title= request.data['project'])
-    if (user in project.users.all()):
+    if (user in project.users.all() and user.account_type=="guide"):
         task = Tasks.objects.get(Q(project=project) & Q(title=request.data['task']))
         task.score_obtained = request.data['score']
         task.save()
@@ -195,3 +195,24 @@ def give_marks(request):
     else:
         return Response({"err":"You dont have permission"})
 
+@permission_classes([IsAuthenticated])
+@api_view(['POST'])
+def view_projects(request):
+    user = request.user
+    if(user.account_type=="admin" or user.account_type=="coordinator"):
+        project = Project.objects.get(title=request.data['title'])
+        serializer = ProjectSerializer2(project, many=False)
+        return Response(serializer.data)
+    else:
+        return Response({"err":"You don't have permission"})
+
+@permission_classes([IsAuthenticated])
+@api_view(['GET'])
+def get_project_names(request):
+    user = request.user
+    if(user.account_type=="admin" or user.account_type=="coordinator"):
+        project = Project.objects.all()
+        serializer = ProjectSerializer(project, many=True)
+        return Response(serializer.data)
+    else:
+        return Response({"err":"You don't have permission"})

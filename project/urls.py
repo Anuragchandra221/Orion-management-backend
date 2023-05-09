@@ -13,5 +13,7 @@ urlpatterns = [
     path('get-project/', views.getProject),
     path('get-pdf/', views.get_pdf),
     path('give-marks/', views.give_marks),
+    path('view-projects/', views.view_projects),
+    path('view-project-names/', views.get_project_names),
 ]
 
