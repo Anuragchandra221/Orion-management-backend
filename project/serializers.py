@@ -1,5 +1,6 @@
 from rest_framework import serializers 
-
+import cloudinary
+import cloudinary.api
 from main.models import Tasks, Project, Work
 
 class TaskSerializer(serializers.ModelSerializer):
@@ -26,6 +27,22 @@ class WorkSerializer(serializers.ModelSerializer):
     class Meta:
         model = Work
         fields = '__all__'   
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+
+        # Fetch the metadata for the image
+        metadata = cloudinary.api.resource(instance.files.public_id)
+
+        # Access the image's MIME type
+        filename = metadata["filename"]
+        extension = metadata['format']
+
+        # Set the MIME type in the representation
+        representation['filename'] = filename
+        representation['extension'] = extension
+
+        return representation
 
 
 

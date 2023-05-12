@@ -44,6 +44,8 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_simplejwt.token_blacklist',
     'corsheaders',
+    'cloudinary_storage',
+    'cloudinary',
 ]
 
 MIDDLEWARE = [
@@ -112,6 +114,12 @@ EMAIL_HOST_USER = "karthikwebapp123@gmail.com"
 EMAIL_HOST_PASSWORD = "utsnosezmvhvojiy"
 EMAIL_USE_SSL = False
 
+CLOUDINARY_STORAGE = {
+    'CLOUD_NAME': 'ddhojwrtd',
+    'API_KEY': '395671819399414',
+    'API_SECRET': 'LCEBoX70PRhDKLeUSvrxnskzfJc',
+}
+
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -179,6 +187,7 @@ USE_TZ = True
 STATIC_URL = 'static/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media/')
 MEDIA_URL = '/media/'
+DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 
 
 # Default primary key field type

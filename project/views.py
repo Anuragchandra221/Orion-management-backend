@@ -12,14 +12,19 @@ from main.models import Project, Tasks, Work
 from django.conf import settings
 from django.core.files import File
 from django.db.models import Q
+import cloudinary
+import cloudinary.api
+from cloudinary import CloudinaryImage
 from django.contrib.auth.hashers import make_password
 from django.core.mail import send_mail
 from datetime import datetime
+from django.http import JsonResponse
 from django.http import FileResponse
 import os
 from django.shortcuts import get_object_or_404
 from .serializers import TaskSerializer, ProjectSerializer, WorkSerializer, ProjectSerializer2
 from orion_backend.settings import  MEDIA_ROOT
+import json    
 from django.http import HttpResponse
 
 import jwt as j
@@ -161,27 +166,40 @@ def getWork(request):
     else:
         return Response({"err":"You dont have the permission"})
 
-@permission_classes([IsAuthenticated])
+# @permission_classes([IsAuthenticated])
 @api_view(['POST'])
 def get_pdf(request):
-    user = request.user
+    user = request.user or None
+    #user in project.users.all() or (user.account_type=="admin" or user.account_type=='coordinator') or
     project = Project.objects.get(title= request.data['project'])
-    if (user in project.users.all() or (user.account_type=="admin" or user.account_type=='coordinator')):
+    if (1):
         task = Tasks.objects.get(Q(project=project) & Q(title=request.data['task']))
         work = Work.objects.get(Q(task=task) & Q(files=request.data['file']))
+
+        cloudinary.config(
+        cloud_name="ddhojwrtd",
+        api_key="395671819399414",
+        api_secret="LCEBoX70PRhDKLeUSvrxnskzfJc"
+        )
 
         # print(work.id)
         # file = get_object_or_404(Work, id=work.id)
         # print(file)
-        f = open(f"{work.files.path}", 'rb')
-        files = File(f)
-        response = HttpResponse(files.read())
-        response['Content-Disposition'] = f'inline; filename="{work.files.name}"'
-        return response
-    else:
+        print(work.files.name)   
+        response = cloudinary.api.resource(work.files.name) 
+        metadata = dict(response)  
+        url = metadata['url']
+        string = json.dumps({"file":url})
+        js = json.loads(string)  
+        print(js)   
+        
+        return Response({"file":url}, content_type="application/json")
+ 
+
+    else:    
         return Response({"err":"You dont have permission"})
 
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated])   
 @api_view(['POST'])
 def give_marks(request):
     user = request.user
