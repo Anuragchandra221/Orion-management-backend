@@ -8,7 +8,7 @@ from rest_framework.response import Response
 from main.serializers import UserSerializer,UserSerializer2
 from django.db.models import Count
 from django.core.mail import send_mail
-from main.models import Project, Tasks, Work
+from main.models import Project, Tasks, Work, OldProjects
 from django.conf import settings
 from django.core.files import File
 from django.db.models import Q
@@ -22,7 +22,7 @@ from django.http import JsonResponse
 from django.http import FileResponse
 import os
 from django.shortcuts import get_object_or_404
-from .serializers import TaskSerializer, ProjectSerializer, WorkSerializer, ProjectSerializer2
+from .serializers import TaskSerializer, ProjectSerializer, WorkSerializer, ProjectSerializer2, OldProjectsSerializer
 from orion_backend.settings import  MEDIA_ROOT
 import json    
 from django.http import HttpResponse
@@ -150,6 +150,44 @@ def uploadWork(request):
     else:
         return Response({"err":"You dont have the permission"})
 
+@permission_classes([IsAuthenticated])
+@api_view(['POST'])
+def upload_old_project(request):
+    title = request.data['title']
+    user = request.user
+    if(user.account_type=="admin"):
+        pro = Project.objects.filter(title=request.data['title']).count()
+        if(pro>0):
+            return Response({"err":"1Something wrong happend"})
+        
+        description = request.data['description']
+        files = request.FILES['file']
+        print(files)
+        pro = OldProjects(title=title, description=description, files=files)
+        try:
+            pro.save()
+            return Response({"msg":"Project added successfully"})
+        except:
+            return Response({"err": "Something wrong happend"})
+    else:
+        return Response({"err":"You don't have permission"})
+    
+
+@api_view(['GET'])
+def search_old_project(request):
+    q = request.GET['q']
+    print(q)
+    pro = OldProjects.objects.filter(Q(title__icontains=q)|Q(description__icontains=q))
+    serializer = OldProjectsSerializer(pro, many=True)
+    return Response(serializer.data)
+
+@api_view(['GET'])
+def get_old_project(request):
+    q = request.GET['q']
+    pro = OldProjects.objects.get(title=q)
+    serializer = OldProjectsSerializer(pro, many=False)
+    return Response(serializer.data)
+
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def getWork(request):
@@ -185,7 +223,6 @@ def get_pdf(request):
         # print(work.id)
         # file = get_object_or_404(Work, id=work.id)
         # print(file)
-        print(work.files.name)   
         response = cloudinary.api.resource(work.files.name) 
         metadata = dict(response)  
         url = metadata['url']
@@ -198,6 +235,29 @@ def get_pdf(request):
 
     else:    
         return Response({"err":"You dont have permission"})
+
+@api_view(['POST'])
+def get_old_pdf(request):
+    q = request.data['q']
+    pro = OldProjects.objects.get(title=q)
+    cloudinary.config(
+    cloud_name="ddhojwrtd",
+    api_key="395671819399414",
+    api_secret="LCEBoX70PRhDKLeUSvrxnskzfJc"
+    )
+
+    # print(work.id)
+    # file = get_object_or_404(Work, id=work.id)
+    # print(file)
+    print(pro.files.name)   
+    response = cloudinary.api.resource(pro.files.name) 
+    metadata = dict(response)  
+    url = metadata['url']
+    string = json.dumps({"file":url})
+    js = json.loads(string)  
+    print(js)   
+    
+    return Response({"file":url}, content_type="application/json")
 
 @permission_classes([IsAuthenticated])   
 @api_view(['POST'])

@@ -1,13 +1,18 @@
 from rest_framework import serializers 
 import cloudinary
 import cloudinary.api
-from main.models import Tasks, Project, Work
+from main.models import Tasks, Project, Work, OldProjects
 
 class TaskSerializer(serializers.ModelSerializer):
     works = serializers.StringRelatedField(many=True)
     class Meta:
         model = Tasks
         fields = ["title", "description", "due_date", "posted", "completed", "max_score", "score_obtained", "works"] 
+
+class OldProjectsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = OldProjects
+        fields = "__all__"
 
 class ProjectSerializer(serializers.ModelSerializer):
     class Meta:

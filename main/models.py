@@ -60,6 +60,14 @@ class Work(models.Model):
 
     def __str__(self):
         return self.files.name
+
+class OldProjects(models.Model):
+    title = models.CharField(max_length=30)
+    description = models.TextField()
+    files = models.FileField( upload_to='files/', max_length=100)
+
+    def __str__(self):
+        return self.title
     
 
 class UserAccount(AbstractBaseUser, PermissionsMixin):
