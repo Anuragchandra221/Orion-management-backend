@@ -105,13 +105,16 @@ def createTask(request):
 def showTask(request):
     user = request.user
     if(user.account_type=="guide" or user.account_type=="student"):
-        project = Project.objects.get(title=request.data['project_title'])
         try:
-            tasks = Tasks.objects.filter(project=project)
+            project = Project.objects.get(title=request.data['project_title'])
+            try:
+                tasks = Tasks.objects.filter(project=project)
+            except:
+                return Response({"err":"No Tasks found"})
+            serializer = TaskSerializer(tasks, many=True)
+            return Response(serializer.data)
         except:
-            return Response({"err":"No Tasks found"})
-        serializer = TaskSerializer(tasks, many=True)
-        return Response(serializer.data)
+            return Response({[]})
     else:
         return Response({"err":"You don't have the permission"})
 

@@ -144,8 +144,12 @@ WSGI_APPLICATION = 'orion_backend.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'postgres',
+        'USER': 'postgres',
+        'PASSWORD': '3clMBUa1yP4BbauI721R',
+        'HOST': 'containers-us-west-66.railway.app',
+        'PORT': '6282'
     }
 }
 

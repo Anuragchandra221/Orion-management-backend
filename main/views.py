@@ -86,7 +86,7 @@ def create_coordinator(request):
             return Response({"err":"Coordinator already exists"})
         password = make_password(request.data['password'])
         user = UserAccount(
-            email=request.data['email'], name=request.data['name'], password=password, account_type="coordinator", dob=request.data['dob'], gender=request.data['gender'],number=request.data['number'], register=request.data['register']
+            email=request.data['email'], name=request.data['name'], password=password, account_type="coordinator", gender=request.data['gender'],number=request.data['number'], register=request.data['register']
         )
         try:    
             subject = "Congratulation on being the coordinator"
@@ -115,7 +115,7 @@ def create_guide(request):
             return Response({"err":"Guide already exists"})
         password = make_password(request.data['password'])
         user = UserAccount(
-            email=request.data['email'], name=request.data['name'], password=password, account_type="guide", dob=request.data['dob'], gender=request.data['gender'],number=request.data['number'], register=request.data['register']
+            email=request.data['email'], name=request.data['name'], password=password, account_type="guide", gender=request.data['gender'],number=request.data['number'], register=request.data['register']
         )
         try:    
             subject = "Congratulation on being the guide"
@@ -144,7 +144,7 @@ def create_student(request):
             return Response({"err":"Student already exists"})
         password = make_password(request.data['password'])
         user = UserAccount(
-            email=request.data['email'], name=request.data['name'], password=password, account_type="student", dob=request.data['dob'], gender=request.data['gender'],number=request.data['number'], register=request.data['register']
+            email=request.data['email'], name=request.data['name'], password=password, account_type="student", gender=request.data['gender'],number=request.data['number'], register=request.data['register']
         )
         try:    
             subject = "Congratulation on being the Student"
@@ -168,10 +168,10 @@ def edit(request):
     if(user.account_type=="admin"):
         print(request.data, user.account_type)
         print("admin")
-        try:
-            UserAccount.objects.filter(email=request.data['email']).update(email=request.data['email'], name=request.data['name'], dob=request.data['dob'], gender=request.data['gender'],number=request.data['number'], register=request.data['register'])
-        except Exception as e:
-            print(e)
+        UserAccount.objects.filter(email=request.data['email']).update(email=request.data['email'], name=request.data['name'], gender=request.data['gender'],number=request.data['number'], register=request.data['register'])
+        # try:
+        # except Exception as e:
+        #     print(e)
         return Response({"msg":"updated successfully"})
     else:
         return Response({"err":"you dont have the permission"})
@@ -181,7 +181,7 @@ def edit(request):
 def edit_guide(request):
     user = request.user
     if(user.account_type=="coordinator"):
-        UserAccount.objects.filter(email=request.data['email']).update(email=request.data['email'], name=request.data['name'], dob=request.data['dob'], gender=request.data['gender'],number=request.data['number'], register=request.data['register'])
+        UserAccount.objects.filter(email=request.data['email']).update(email=request.data['email'], name=request.data['name'], gender=request.data['gender'],number=request.data['number'], register=request.data['register'])
         return Response({"msg":"updated successfully"})
     else:
         return Response({"err":"you dont have the permission"})
