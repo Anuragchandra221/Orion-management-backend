@@ -22,7 +22,7 @@ from django.http import JsonResponse
 from django.http import FileResponse
 import os
 from django.shortcuts import get_object_or_404
-from .serializers import TaskSerializer, ProjectSerializer, WorkSerializer, ProjectSerializer2, OldProjectsSerializer
+from .serializers import TaskSerializer, ProjectSerializer, WorkSerializer, ProjectSerializer2, OldProjectsSerializer, TaskSeializer2
 from orion_backend.settings import  MEDIA_ROOT
 import json    
 from django.http import HttpResponse
@@ -39,7 +39,7 @@ def startProject(request):
     if(user.account_type=="coordinator"):
         project = Project.objects.filter(title=request.data['title']).count()
         if(project>0):
-            return Response({"err":"1Something wrong happend"})
+            return Response({"err":"Project Already exists"})
         try:
             project = Project(title=request.data['title'], description=request.data['description'])
             project.save()
@@ -47,30 +47,68 @@ def startProject(request):
             return Response({"err":"2Something wrong happend"})
         project = Project.objects.get(title=request.data['title'])
         user = UserAccount.objects.get(email=request.data['guide'])
-        user.project = project
+        user.project.add(project)
         user.save()
         if(request.data['student1']):
             user = UserAccount.objects.get(email=request.data['student1'])
-            user.project = project
+            if(user.project.all().count()>1):
+                return Response({"err":"The student is already in a project"})
+            user.project.add(project)
             user.save()
 
         if(request.data['student2']):
             user = UserAccount.objects.get(email=request.data['student2'])
-            user.project = project
+            if(user.project.all().count()>1):
+                return Response({"err":"The student is already in a project"})
+            user.project.add(project)
             user.save()
 
         if(request.data['student3']):
             user = UserAccount.objects.get(email=request.data['student3'])
-            user.project = project
+            if(user.project.all().count()>1):
+                return Response({"err":"The student is already in a project"})
+            user.project.add(project)
             user.save()
 
         if(request.data['student4']):
             user = UserAccount.objects.get(email=request.data['student4'])
-            user.project = project
+            if(user.project.all().count()>1):
+                return Response({"err":"The student is already in a project"})
+            user.project.add(project)
             user.save()
         return Response({"msg":"Project Added"})
     else:
         return Response({"err":"You don't have the permission"})
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def get_task(request):
+    user = request.user
+    project = Project.objects.get(title= request.data['project'])
+    if (user in project.users.all() and user.account_type=="guide"):
+        task = Tasks.objects.get(Q(title=request.data['task']) & Q(project=project))
+        serializer = TaskSeializer2(task, many=False)
+        return Response(serializer.data)
+    else:
+        return Response({"err":"You dont have permission"})
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def edit_task(request):
+    user = request.user
+    project = Project.objects.get(title= request.data['project_title'])
+    if (user in project.users.all() and user.account_type=="guide"):
+        description = request.data['description']
+        due_date = request.data['due_date']
+        task = Tasks.objects.get(Q(title=request.data['task']) & Q(project=project))
+        task.title=request.data['task_title']
+        task.description=description
+        task.due_date=due_date
+        task.save()
+        return Response({"msg":"Edited"})
+    else:
+        return Response({"err":"You dont have permission"})
+
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
@@ -111,7 +149,7 @@ def showTask(request):
                 tasks = Tasks.objects.filter(project=project)
             except:
                 return Response({"err":"No Tasks found"})
-            serializer = TaskSerializer(tasks, many=True)
+            serializer = ProjectSerializer2(project, many=True)
             return Response(serializer.data)
         except:
             return Response({[]})
@@ -122,12 +160,16 @@ def showTask(request):
 @permission_classes([IsAuthenticated])
 def getProject(request):
     user = request.user
+    print("HIHI")
     if(user.account_type=="guide" or user.account_type=="student"):
         try:
-            project = user.project
+            project = user.project.all()
+
+            print(project)
         except:
             return Response({"err":"No Project found"})
-        serializer = ProjectSerializer(project, many=False)
+        serializer = ProjectSerializer2(project, many=True)
+        print(serializer.data)
         return Response(serializer.data)
     else:
         return Response({"err":"You don't have the permission"})
@@ -165,8 +207,14 @@ def upload_old_project(request):
         
         description = request.data['description']
         files = request.FILES['file']
+        guide = request.data['guide']
+        std1 = request.data['std1']
+        std2 = request.data['std2']
+        std3 = request.data['std3']
+        std4 = request.data['std4']
+        year = request.data['year']
         print(files)
-        pro = OldProjects(title=title, description=description, files=files)
+        pro = OldProjects(title=title, description=description, files=files, guide=guide, std1=std1, std2=std2, std3=std3, std4=std4, year=year)
         try:
             pro.save()
             return Response({"msg":"Project added successfully"})
@@ -175,7 +223,19 @@ def upload_old_project(request):
     else:
         return Response({"err":"You don't have permission"})
     
+@permission_classes([IsAuthenticated])
+@api_view(['GET'])
+def get_old_project_by_year(request):
+    usr = request.user
+    if(usr.account_type=="admin" or usr.account_type=="coordinator"):
+        year = request.GET['year']
+        pro = OldProjects.objects.filter(year=year)
+        serializer = OldProjectsSerializer(pro, many=True)
+        return Response(serializer.data)
+    else:
+        return Response({"err":"You don't have permission"})
 
+@permission_classes([IsAuthenticated])
 @api_view(['GET'])
 def search_old_project(request):
     q = request.GET['q']
@@ -187,9 +247,15 @@ def search_old_project(request):
 @api_view(['GET'])
 def get_old_project(request):
     q = request.GET['q']
+    print(q)
     pro = OldProjects.objects.get(title=q)
-    serializer = OldProjectsSerializer(pro, many=False)
-    return Response(serializer.data)
+    print(pro)
+    try:
+        serializer = OldProjectsSerializer(pro, many=False)
+        return Response(serializer.data)
+    except:
+        print("No data exist")
+        return Response({"err": "No data"})
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])

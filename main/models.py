@@ -65,6 +65,12 @@ class OldProjects(models.Model):
     title = models.CharField(max_length=30)
     description = models.TextField()
     files = models.FileField( upload_to='files/', max_length=100)
+    guide = models.CharField(max_length=40, null=True, blank=True)
+    std1 = models.CharField(max_length=40, null=True, blank=True)
+    std2 = models.CharField(max_length=40, null=True, blank=True)
+    std3 = models.CharField(max_length=40, null=True, blank=True)
+    std4 = models.CharField(max_length=40, null=True, blank=True)
+    year = models.IntegerField(null=True)
 
     def __str__(self):
         return self.title
@@ -79,7 +85,7 @@ class UserAccount(AbstractBaseUser, PermissionsMixin):
     gender = models.CharField(max_length=8)
     number = models.CharField( max_length=50, null=True)
     register = models.CharField(max_length=50, null=True)
-    project = models.ForeignKey(Project, null=True, on_delete=models.PROTECT, related_name="users")
+    project = models.ManyToManyField(Project, related_name="users")
 
     objects = UserAccountManager()
 

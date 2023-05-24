@@ -2,6 +2,7 @@ from rest_framework import serializers
 import cloudinary
 import cloudinary.api
 from main.models import Tasks, Project, Work, OldProjects
+from main.serializers import UserSerializer2
 
 class TaskSerializer(serializers.ModelSerializer):
     works = serializers.StringRelatedField(many=True)
@@ -9,21 +10,28 @@ class TaskSerializer(serializers.ModelSerializer):
         model = Tasks
         fields = ["title", "description", "due_date", "posted", "completed", "max_score", "score_obtained", "works"] 
 
+class TaskSeializer2(serializers.ModelSerializer):
+    class Meta:
+        model = Tasks
+        fields = "__all__"
+
 class OldProjectsSerializer(serializers.ModelSerializer):
     class Meta:
         model = OldProjects
         fields = "__all__"
 
 class ProjectSerializer(serializers.ModelSerializer):
+    users = UserSerializer2(many=True, read_only=True)
     class Meta:
         model = Project
-        fields = ["title", "description"]
+        fields = ["title", "description", "users"]
 
 class ProjectSerializer2(serializers.ModelSerializer):
+    users = UserSerializer2(many=True, read_only=True)
     tasks = TaskSerializer(many=True, read_only=True)
     class Meta:
         model = Project
-        fields = ["title", "description", "tasks"]
+        fields = ["title", "description", "tasks", "users"]
 
 
 class WorkSerializer(serializers.ModelSerializer):

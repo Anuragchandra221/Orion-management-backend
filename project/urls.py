@@ -19,5 +19,8 @@ urlpatterns = [
     path('upload-old-project/', views.upload_old_project),
     path('search-old-project/', views.search_old_project),
     path('get-old-project/', views.get_old_project),
+    path('retrieve-task/', views.get_task),
+    path('edit-task/', views.edit_task),
+    path('get-old-project-by-year/', views.get_old_project_by_year),
 ]
 
