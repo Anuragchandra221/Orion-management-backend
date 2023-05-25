@@ -7,6 +7,7 @@ from .models import UserAccount
 from rest_framework.response import Response
 from .serializers import UserSerializer,UserSerializer2
 from django.db.models import Count
+from django.db.models import Q
 from django.conf import settings
 from django.contrib.auth.hashers import make_password
 from django.core.mail import send_mail
@@ -59,10 +60,17 @@ def getGuide(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def getStudent(request):
-    guide = UserAccount.objects.filter(account_type="student")
-    serializer = UserSerializer(guide, many=True)
-
-    return Response(serializer.data)
+    usr = request.user
+    if(usr.account_type=="guide"):
+        project = usr.project.all()
+        print(project)
+        std = UserAccount.objects.filter(Q(project__in=project) & Q(account_type="student"))
+        serializer = UserSerializer(std, many=True)
+        return Response(serializer.data)
+    else:
+        guide = UserAccount.objects.filter(account_type="student")
+        serializer = UserSerializer(guide, many=True)
+        return Response(serializer.data)
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
