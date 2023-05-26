@@ -188,7 +188,10 @@ def edit(request):
 @permission_classes([IsAuthenticated])
 def edit_guide(request):
     user = request.user
-    if(user.account_type=="coordinator"):
+    project = user.project.all()
+    print(project)
+    std = UserAccount.objects.filter(Q(email=request.data['email']) & Q(project__in=project) & Q(account_type="student"))
+    if(user.account_type=="coordinator" or std.count()>0):
         UserAccount.objects.filter(email=request.data['email']).update(email=request.data['email'], name=request.data['name'], gender=request.data['gender'],number=request.data['number'], register=request.data['register'])
         return Response({"msg":"updated successfully"})
     else:
