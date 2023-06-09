@@ -1,6 +1,11 @@
 from rest_framework import serializers
 
-from .models import UserAccount
+from .models import UserAccount, Mark
+
+class MarkSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Mark
+        fields = ['marks']
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:

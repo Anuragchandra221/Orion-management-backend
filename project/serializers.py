@@ -1,14 +1,31 @@
 from rest_framework import serializers 
 import cloudinary
 import cloudinary.api
-from main.models import Tasks, Project, Work, OldProjects
-from main.serializers import UserSerializer2
+from main.models import Tasks, Project, Work, OldProjects, Mark, UserAccount
+from django.db.models import Q
+from main.serializers import UserSerializer2, UserSerializer
+
+
+class MarkSerializer(serializers.ModelSerializer):
+    user = UserSerializer()
+    class Meta:
+        model = Mark
+        fields = ["user", "marks"]
 
 class TaskSerializer(serializers.ModelSerializer):
     works = serializers.StringRelatedField(many=True)
+    marks = serializers.SerializerMethodField() 
     class Meta:
         model = Tasks
-        fields = ["title", "description", "due_date", "posted", "completed", "max_score", "score_obtained", "works"] 
+        fields = ["title", "description", "due_date", "posted", "completed", "max_score", "works", "marks"] 
+    def get_marks(self, obj):
+        proj = obj.project
+        task_ids = obj.id
+        user_ids = proj.users.values_list("id", flat=True)
+        marks = Mark.objects.filter(Q(assignment=task_ids) & Q(user__in=user_ids))
+        mark_serializer = MarkSerializer(marks, many=True)
+        return mark_serializer.data
+    
 
 class TaskSeializer2(serializers.ModelSerializer):
     class Meta:
@@ -20,6 +37,8 @@ class OldProjectsSerializer(serializers.ModelSerializer):
         model = OldProjects
         fields = "__all__"
 
+
+
 class ProjectSerializer(serializers.ModelSerializer):
     users = UserSerializer2(many=True, read_only=True)
     class Meta:
@@ -29,9 +48,11 @@ class ProjectSerializer(serializers.ModelSerializer):
 class ProjectSerializer2(serializers.ModelSerializer):
     users = UserSerializer2(many=True, read_only=True)
     tasks = TaskSerializer(many=True, read_only=True)
+    
     class Meta:
         model = Project
         fields = ["title", "description", "tasks", "users"]
+    
 
 
 class WorkSerializer(serializers.ModelSerializer):

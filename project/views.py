@@ -8,7 +8,7 @@ from rest_framework.response import Response
 from main.serializers import UserSerializer,UserSerializer2
 from django.db.models import Count
 from django.core.mail import send_mail
-from main.models import Project, Tasks, Work, OldProjects
+from main.models import Project, Tasks, Work, OldProjects, Mark
 from django.conf import settings
 from django.core.files import File
 from django.db.models import Q
@@ -334,9 +334,12 @@ def give_marks(request):
     user = request.user
     project = Project.objects.get(title= request.data['project'])
     if (user in project.users.all() and user.account_type=="guide"):
+        user = request.data['user']
+        user = UserAccount.objects.get(email=user)
         task = Tasks.objects.get(Q(project=project) & Q(title=request.data['task']))
-        task.score_obtained = request.data['score']
-        task.save()
+        print(user, task)
+        usr = Mark(assignment=task,user=user, marks=request.data['score'])
+        usr.save()
         return Response({"msg":"Score updated"})
 
     else:

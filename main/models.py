@@ -44,7 +44,6 @@ class Tasks(models.Model):
     project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name="tasks")
     completed = models.BooleanField(default=False)
     max_score = models.IntegerField(default=100)
-    score_obtained = models.IntegerField(null=True)
 
     class Meta:
         ordering = ["-due_date"]
@@ -52,6 +51,7 @@ class Tasks(models.Model):
     def __str__(self):
         return self.title+' '+self.project.title
     
+
 
 class Work(models.Model):
     id = models.AutoField(primary_key=True)
@@ -94,3 +94,11 @@ class UserAccount(AbstractBaseUser, PermissionsMixin):
 
     def __str__(self):
         return self.email
+
+class Mark(models.Model):
+    assignment = models.ForeignKey(Tasks, on_delete=models.CASCADE, null=True, related_name="marks")
+    user = models.ForeignKey(UserAccount, on_delete=models.CASCADE, null=True, related_name="marks")
+    marks = models.IntegerField()
+
+    def __str__(self):
+        return f"{self.user.name}'s mark for {self.assignment.title}"
