@@ -128,7 +128,8 @@ def createTask(request):
                 send_mail(subject, message, settings.EMAIL_HOST_USER, [i.email])
             description = request.data['description']
             due_date = request.data['due_date']
-            task = Tasks(title=request.data['task_title'], description=description, due_date=due_date, project=project)
+            max_mark = request.data['max_score']
+            task = Tasks(title=request.data['task_title'], description=description, due_date=due_date, project=project, max_score=max_mark)
             try:
                 task.save()
                 return Response({"msg":"Task added successfully"})
