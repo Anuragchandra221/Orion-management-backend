@@ -41,9 +41,10 @@ class OldProjectsSerializer(serializers.ModelSerializer):
 
 class ProjectSerializer(serializers.ModelSerializer):
     users = UserSerializer2(many=True, read_only=True)
+    tasks = TaskSerializer(many=True, read_only=True)
     class Meta:
         model = Project
-        fields = ["title", "description", "users"]
+        fields = ["title", "description", "users", "tasks"]
 
 class ProjectSerializer2(serializers.ModelSerializer):
     users = UserSerializer2(many=True, read_only=True)
